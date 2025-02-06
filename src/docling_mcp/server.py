@@ -10,7 +10,7 @@ from docling.datamodel.pipeline_options import PdfPipelineOptions
 server = Server("docling-mcp")
 
 @server.list_tools()
-async def list_Tools() -> list[types.Tool]:
+async def handle_list_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="convert",
@@ -28,12 +28,12 @@ async def list_Tools() -> list[types.Tool]:
                     }
                 },
                 "required": ["source"]
-            }
-        )
+            },
+        ),
     ]
 
-@server.call_tools()
-async def call_Tools(name: str, params: dict) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+@server.call_tool()
+async def handle_call_tool(name: str, params: dict | None) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
     if name not in ["convert"]:
         raise ValueError(f"Unknown tool: {name}")
     
@@ -73,10 +73,10 @@ async def call_Tools(name: str, params: dict) -> list[types.TextContent | types.
         raise ValueError(f"Error converting file: {e}")
 
 async def main():
-    async with mcp.server.stdio.stdio_server(server) as (stdin, stdout):
+    async with stdio.stdio_server() as (read_stream, write_stream):
         await server.run(
-            stdin=stdin,
-            stdout=stdout,
+            read_stream,
+            write_stream,
             InitializationOptions(
                 server_name="docling-mcp",
                 server_version="0.1.0",
@@ -84,5 +84,5 @@ async def main():
                     notification_options=NotificationOptions(),
                     experimental_capabilities={},
                 ),
-            )
+            ),
         )

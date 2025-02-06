@@ -1,6 +1,6 @@
 [project]
 name = "docling-mcp"
-version = "0.0.1"
+version = "0.0.6"
 description = "A MCP server that uses Docling by IBM to parse documents."
 readme = "README.md"
 requires-python = ">=3.11"
