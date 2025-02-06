@@ -3,8 +3,9 @@ import docling
 import mcp.types as types
 from mcp.server import Server, NotificationOptions
 from mcp.server.models import InitializationOptions
+from docling.datamodel.base_models import InputFormat
 import mcp.server.stdio as stdio
-from docling.document_converter import DocumentConverter
+from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 
 server = Server("docling-mcp")
