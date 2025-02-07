@@ -66,7 +66,7 @@ async def handle_call_tool(name: str, params: dict | None) -> list[types.TextCon
         conv_result = doc_converter.convert(Path(input_file))
         end_time = time.time() - start_time
         _log.info(f"Document converted in {end_time:.2f} seconds.")
-        output_dir = Path("scratch")
+        output_dir = Path("/Users/deepshah/Desktop/")
         output_dir.mkdir(parents=True, exist_ok=True)
         doc_filename = conv_result.input.file.stem
         
