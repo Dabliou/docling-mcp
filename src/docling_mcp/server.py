@@ -66,16 +66,12 @@ async def handle_call_tool(name: str, params: dict | None) -> list[types.TextCon
         conv_result = doc_converter.convert(Path(input_file))
         end_time = time.time() - start_time
         _log.info(f"Document converted in {end_time:.2f} seconds.")
-        output_dir = Path("/Users/deepshah/Desktop/")
-        output_dir.mkdir(parents=True, exist_ok=True)
-        doc_filename = conv_result.input.file.stem
+        output_dir = Path(output_file)
         
         if not output_file:
-            with (output_dir / f"{doc_filename}.md").open("w", encoding="utf-8") as fp:
-                fp.write(conv_result.document.export_to_markdown())
             notify = f"Converted Content saved to {conv_result.document.export_to_markdown()}."
         else:
-            with (output_dir / f"{doc_filename}.md").open("w", encoding="utf-8") as fp:
+            with (output_dir).open("w", encoding="utf-8") as fp:
                 fp.write(conv_result.document.export_to_markdown())
             notify = f"Converted Content saved to {output_dir}."
         _log.info(f"got this: {notify}")
