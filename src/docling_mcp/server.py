@@ -1,14 +1,19 @@
 import os
+import time
 import docling
 import mcp.types as types
 from mcp.server import Server, NotificationOptions
 from mcp.server.models import InitializationOptions
 from docling.datamodel.base_models import InputFormat
 import mcp.server.stdio as stdio
+import logging
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.pipeline_options import PdfPipelineOptions
+from pathlib import Path
 
 server = Server("docling-mcp")
+
+_log = logging.getLogger(__name__)
 
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
@@ -30,7 +35,7 @@ async def handle_list_tools() -> list[types.Tool]:
                 },
                 "required": ["source"]
             },
-        ),
+        )
     ]
 
 @server.call_tool()
@@ -56,24 +61,32 @@ async def handle_call_tool(name: str, params: dict | None) -> list[types.TextCon
         pipeline_options.do_table_structure = True
         pipeline_options.table_structure_options.do_cell_matching = True
 
-        doc_converter = DocumentConverter(
-            format_options={
-                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
-            }
-        )   
-        output = doc_converter.convert(input_file).document.export_to_markdown()
+        doc_converter = DocumentConverter()   
+        start_time = time.time()
+        conv_result = doc_converter.convert(Path(input_file))
+        end_time = time.time() - start_time
+        _log.info(f"Document converted in {end_time:.2f} seconds.")
+        output_dir = Path("scratch")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        doc_filename = conv_result.input.file.stem
+        
         if not output_file:
-            notify = (f"Converted Content: \n\n{output}.\n"
-            f"Ask the user if they want to save the file. If so, ask the absolute path to save the file.")
+            with (output_dir / f"{doc_filename}.md").open("w", encoding="utf-8") as fp:
+                fp.write(conv_result.document.export_to_markdown())
+            notify = f"Converted Content saved to {conv_result.document.export_to_markdown()}."
         else:
-            with (output_file).open("w", encoding="utf-8") as fp:
-                fp.write(output)
-            notify = f"Converted Content saved to {output_file}."
+            with (output_dir / f"{doc_filename}.md").open("w", encoding="utf-8") as fp:
+                fp.write(conv_result.document.export_to_markdown())
+            notify = f"Converted Content saved to {output_dir}."
+        _log.info(f"got this: {notify}")
         return [types.TextContent(type="text", text=notify)]
     except Exception as e:
         raise ValueError(f"Error converting file: {e}")
 
 async def main():
+
+    logging.basicConfig(level=logging.INFO)
+
     async with stdio.stdio_server() as (read_stream, write_stream):
         await server.run(
             read_stream,
